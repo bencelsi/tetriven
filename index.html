@@ -1,60 +1,83 @@
-<!---     ____      __    __    _        __     ___    _
-|    \  (_    _) |  |  |  | \    ___) |    \  |  | 
-|     )   |  |   |  |  |  |  |  (__   |  |\ \ |  | 
-|    /    |  |   |  |  |  |  |   __)  |  | \ \|  | 
-| |\ \   _|  |_   \  \/  /   |  (___  |  |  \    | 
-| |_\ \_(      )___\    /___/       )_|  |___\   |_
-_        __        ___        __     ____      ___       __
-(__    __) \    ___) (__    __) |    \  (_    _)  )  ____) 
-   |  |     |  (__      |  |    |     )   |  |   (  (___   
-   |  |     |   __)     |  |    |    /    |  |    \___  \  
-   |  |     |  (___     |  |    | |\ \   _|  |_   ____)  ) 
-___|  |____/       )____|  |____| |_\ \_(      )_(      (__
+<!---							   		
+ _______ ______ _______ _____  _____ _        ________ _   _ 
+|__   __|  ____|__   __|  __ \|_   _\ \      / /  ____| \ | |
+   | |  | |__     | |  | |__) | | |  \ \    / /| |__  |  \| |
+   | |  |  __|    | |  |  _  /  | |   \ \  / / |  __| | . ` |
+   | |  | |____   | |  | | \ \ _| |_   \ \/ /  | |____| |\  |
+   |_|  |______|  |_|  |_|  \_\_____|   \  /   |______|_| \_|   
+									              \/
+
+
+//TODO- 
+
+//
+//higher image quality
+//higher quality gehn clips
+//sound volumes
+//pause / space bug
+//extract sounds from videos
+//options menu
+//linking book to enter
+//island images for next
+
+//Sound ideas - 
+//156
+//drop - waffle iron fail
+//light selector, pinscreen, lake lever, wahrk smash, waffle iron, 
+
+//win: gehn singing?
+//lose: fissure, clear marbles
+//new game - link
+//rename repo
+
+// Alternate gehn messages
+// 'i hope to see you back here shortly' , 
+// 'You are free to go' - not quite mean enough
+// 'you have my sympathies.'
+// 'It's a pity'
+// 'know that with this act of self-sacrifice, you have secured your place in history'
+
 --->
 
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Riven Tetris</title>
-	<link rel="icon" href="pics/APPICON.ico">
+	<meta property="og:image" content="img/background.png" />
+	<title>TETRIVEN</title>
+	<link rel="icon" href="favicon.ico">
 	<style>
-		body      { font-family: Helvetica, sans-serif; background-color: black; }
-		#tetris   { width: 750px; margin: 1em auto; padding: 1em; background: black; background-size: cover;}
-		#canvas   { width: 300px; height: 600px; display: inline-block; vertical-align: top; background: url(pics/grid.png); background-size: 100% 100%; border: 2px solid #333;}
-		#top      { width: 300px; height: 150px;  }
-		#menu     { width: 350px; display: inline-block; vertical-align: top; position: relative; float: left;}
-		#menu p   { margin: 0.5em 0; text-align: center; }
-		#menu p a { text-decoration: none; color: black; }
-		#upcoming { width: 250px; height: 188px; display: block; margin: 0 auto; background-color: #E0E0E0; }
-		#score    { color: red; font-weight: bold; vertical-align: middle; }
-		#text	  { color: white; }
+		body { background-color: black; }
+		#tetris {
+			width: 450px;
+			margin: auto;
+		}
+		#canvas {
+			width: 450px; 
+			height: 812px;
+			display: inline-block;
+			background: url('img/background.png');
+			background-size: 100% 100%;
+		}
+		#start {
+			width: 300px; 
+			display: block;
+			margin: 15px auto;
+		}
+		#score {
+			text-align: center;
+			margin-top: 10px;
+			display: block;
+			visibility: hidden;
+		}
 	</style>
 </head>
 <body>
 	<div id="tetris">
-		
-		<div id="menu">
-
-			<img id="top" src="top.png">
-			<p><img id="upcoming"></p>
-			<p>
-				<p>
-					<img id= "score1" src="pics/digits/Dni0.png">
-					<img id= "score2" src="pics/digits/Dni0.png">
-					<img id= "score3" src="pics/digits/Dni0.png">
-					<img id= "score4" src="pics/digits/Dni0.png">
-					<img id= "score5" src="pics/digits/Dni0.png">
-				</p>
-			</p>
-
-			<img src="title.png">
+		<canvas id="canvas"></canvas>
+		<img id="start" src="img/start.png">
+		<div id="score">
+			<img src="img/digits/DniLeft.png"><img id="digit0" class="digit" src="img/digits/Dni0.png"><img src="img/digits/DniRight.png">
 		</div>
-
-		<div>
-			<canvas id="canvas"></canvas>
-		</div>
-		<p id="start" >Press Space to Start</a></p>
-
 	</div>
 	<script>
 
@@ -62,11 +85,7 @@ ___|  |____/       )____|  |____| |_\ \_(      )_(      (__
 		// base helper methods
 		//-------------------------------------------------------------------------
 
-		function get(id)        { return document.getElementById(id);  }
-		function hide(id)       { get(id).style.visibility = 'hidden'; }
-		function show(id)       { get(id).style.visibility = null;     }
-		function html(id, html) { get(id).innerHTML = html;            }
-
+		function get(id)        		 { return document.getElementById(id);  }
 		function timestamp()           { return new Date().getTime();                             }
 		function random(min, max)      { return (min + (Math.random() * (max - min)));            }
 		function randomChoice(choices) { return choices[Math.round(random(0, choices.length-1))]; }
@@ -85,47 +104,81 @@ ___|  |____/       )____|  |____| |_\ \_(      )_(      (__
 		// game constants
 		//-------------------------------------------------------------------------
 
-		var KEY		= { ESC: 27, SPACE: 32, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40 },
+		var KEY		= { ESC: 27, SPACE: 32, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, M: 77, P: 80 },
 		DIR			= { UP: 0, RIGHT: 1, DOWN: 2, LEFT: 3, MIN: 0, MAX: 3 },
 		canvas		= get('canvas'),
 		ctx			= canvas.getContext('2d'),
-		upcoming	= get('upcoming'),
-		speed		= { start: 0.6, decrement: 0.005, min: 0.1 }, // how long before piece drops by 1 row (seconds)
+		speed		= { start: .5, decrement: 0.005, min: 0.1 }, // how long before piece drops by 1 row (seconds)
 		nx			= 10, // width of tetris court (in blocks)
 		ny			= 20, // height of tetris court (in blocks)
-		nu			= 5;  // width/height of upcoming preview (in blocks)
-		max			= 9765624;
 		sound		= get('sound');
 		soundSource	= get('soundSource');
-		soundMap 	= new Map();
-		//TODO- 
-		//sound volumes
-		//extract sounds from videos
-		//pause music with game
-		//pause game option
-		//linking book to enter
-		//island images for next
-		//neaten ui
-		// rename tetriven?
+		upcoming = new Image();
 
-		//Sound ideas - 
-		//music - remix gehns instrument into tetris theme
-		//156
-		//new game - link
-		//move: dome code tick,
-		//rotate:
-		//cant move
-		//drop - waffle iron fail
-		//light selector, pinscreen, lake lever, wahrk smash, waffle iron, 
-		//win: gehn singing
-		//lose: fissure
-		//
+		types = [
+			//temple:
+			{ blocks: [0b0000011001110000, 0b0000011001100100, 0b0000111001100000, 0b0010011001100000],
+				bit: '0b1000000000000000',
+				size: 4,
+				color: 'green',
+				start: { x: 3, y: -3 },
+				number: 1
+			},
+			//jungle:
+			{ blocks: [0b0000011110111100111000000, 0b0011001110011100111000000, 0b0000001110011110111100000, 0b0000001110011100111001100],
+				bit: '0b1000000000000000000000000',
+				size: 5,
+				color: 'red',
+				start: { x: 3, y: -4 },
+				number: 2
+			},
+			//boiler:
+			{ blocks:  [0b1111],
+				bit: '0b1000',
+				size: 2,
+				color: 'purple',
+				start: { x: 4, y: -2 },
+				number: 3
+			},
+			//survey:
+			{ blocks: [0b010010011, 0b000111100, 0b110010010, 0b001111000],
+				bit: '0b100000000',
+				size: 3,
+				color: 'orange',
+				start: { x: 3, y: -3 },
+				number: 4
+			},
+			//prison:
+			{ blocks: [0b1],
+				bit: '0b1',
+				size: 1,
+				color: 'blue',
+				start: {x: 4, y: -1 },
+				number: 5
+			}
+		]
+
+		colorMap = {
+			'green':	['rgb(41, 123, 16)', 'rgb(0, 239, 0)', 'rgb(206, 255, 181)'],
+			'red': 		['rgb(123, 0, 0)', 'rgb(239, 0, 0)', 'rgb(255, 198, 198)'],
+			'purple': 	['rgb(82, 0, 140)', 'rgb(173, 0, 189)', 'rgb(222, 156, 255)'],
+			'orange': 	['rgb(140, 74, 0)', 'rgb(255, 123, 0)', 'rgb(255, 255, 170)'],
+			'blue': 	['rgb(0, 0, 132)', 'rgb(0, 0, 247)', 'rgb(82, 181, 222)']
+		}
+
+		gehnRemarks = [
+			"back","changed","disappointed", "end", "farewell", 
+			"foolishness", "recovered", "son", "thought", "trap"
+		]
+
+
+
 
 		//-------------------------------------------------------------------------
 		// game variables (initialized during reset)
 		//-------------------------------------------------------------------------
 
-		var dx, dy,        // pixel size of a single tetris block
+		var blockSize,        // pixel size of a single tetris block
 			blocks,        // 2 dimensional array (nx*ny) representing tetris court - either empty block or occupied by a 'piece'
 			actions,       // queue of user actions (inputs)
 			playing,       // true|false - game is in progress
@@ -137,75 +190,10 @@ ___|  |____/       )____|  |____| |_\ \_(      )_(      (__
 			rows,          // number of completed rows in the current game
 			step;          // how long before current piece drops by 1 row
 
-		//-------------------------------------------------------------------------
-		// tetris pieces
-		//
-		// blocks: each element represents a rotation of the piece (0, 90, 180, 270)
-		//         each element is a 16 bit integer where the 16 bits represent
-		//         a 4x4 set of blocks, e.g. j.blocks[0] = 0x44C0
-		//
-		//             0100 = 0x4 << 3 = 0x4000
-		//             0100 = 0x4 << 2 = 0x0400
-		//             1100 = 0xC << 1 = 0x00C0
-		//             0000 = 0x0 << 0 = 0x0000
-		//                               ------
-		//                               0x44C0
-		///
-		//-------------------------------------------------------------------------
+		var digits = 1;
+		var muted = false
+		var bag = [];
 		
-
-		var temple = { blocks: [0x0670, 0x0664, 0x0E60, 0x2660], color: 'orange', index: 1 };
-		var jungle = { blocks: [0xFF70, 0x3777, 0x0EFF, 0xEEEC], color: 'red',    index: 2 };
-		var boiler = { blocks: [0x0660, 0x0660, 0x0660, 0x0660], color: 'purple', index: 3 };
-		var survey = { blocks: [0x4460, 0x0E80, 0xC440, 0x2E00], color: 'green',  index: 4 };
-		var prison = { blocks: [0x0400, 0x0400, 0x0400, 0x0400], color: 'blue',   index: 5 };
-
-		//------------------------------------------------
-		// do the bit manipulation and iterate through each
-		// occupied block (x,y) for a given piece
-		//------------------------------------------------
-		function eachblock(type, x, y, dir, fn) {
-			var bit, result, row = 0, col = 0, blocks = type.blocks[dir];
-			for(bit = 0x8000 ; bit > 0 ; bit = bit >> 1) {
-				if (blocks & bit) {
-					fn(x + col, y + row);
-				}
-				if (++col === 4) {
-					col = 0;
-					++row;
-				}
-			}
-		}
-
-		//-----------------------------------------------------
-		// check if a piece can fit into a position in the grid
-		//-----------------------------------------------------
-		function occupied(type, x, y, dir) {
-			var result = false
-			eachblock(type, x, y, dir, function(x, y) {
-				if ((x < 0) || (x >= nx) || (y < -5) || (y >= ny) || getBlock(x,y)) {
-					result = true;
-				}
-			});
-			return result;
-		}
-
-		//-----------------------------------------
-		// start with 5 instances of each piece and
-		// pick randomly until the 'bag is empty'
-		//-----------------------------------------
-		var pieces = [];
-		function randomPiece() {
-			if (pieces.length == 0)
-				pieces = [temple,temple,temple,temple,temple,
-					jungle,jungle,jungle,jungle,jungle,
-					boiler,boiler,boiler,boiler,boiler,
-					survey,survey,survey,survey,survey,
-					prison,prison,prison,prison,prison];
-			var type = pieces.splice(random(0, pieces.length-1), 1)[0];
-			return { type: type, dir: DIR.UP, x: 3, y: -2 };
-		}
-
 
 		//-------------------------------------------------------------------------
 		// GAME LOOP
@@ -213,7 +201,6 @@ ___|  |____/       )____|  |____| |_\ \_(      )_(      (__
 
 		function run() {
 			addEvents(); // attach keydown and resize events
-
 			var last = now = timestamp();
 			function frame() {
 				now = timestamp();
@@ -222,7 +209,6 @@ ___|  |____/       )____|  |____| |_\ \_(      )_(      (__
 				last = now;
 				requestAnimationFrame(frame, canvas);
 			}
-			setupSound();
 			resize(); // setup all our sizing information
 			reset();  // reset the per-game variables
 			frame();  // start the first frame
@@ -234,107 +220,121 @@ ___|  |____/       )____|  |____| |_\ \_(      )_(      (__
 		}
 
 		function resize(event) {
-			canvas.width   = canvas.clientWidth;  // set canvas logical size equal to its physical size
-			canvas.height  = canvas.clientHeight; // (ditto)
-			dx = canvas.width  / nx; // pixel size of a single tetris block
-			dy = canvas.height / ny; // (ditto)
+			canvas.width   = canvas.clientWidth;
+			canvas.height  = canvas.clientHeight;
+			
+			gridWidth = canvas.width * .577
+			gridHeight = gridWidth * 2
+			xOffset = (canvas.width - gridWidth)/2
+			yOffset = canvas.height * .333
+			blockSize = gridWidth / nx; // pixel size of a single tetris block
+			
 			invalidate();
 			invalidateNext();
 		}
 
 		function keydown(ev) {
-			var handled = false;
 			if (playing) {
 				switch(ev.keyCode) {
-					case KEY.LEFT:   actions.push(DIR.LEFT);  handled = true; break;
-					case KEY.RIGHT:  actions.push(DIR.RIGHT); handled = true; break;
-					case KEY.UP:     actions.push(DIR.UP);    handled = true; break;
-					case KEY.DOWN:   actions.push(DIR.DOWN);  handled = true; break;
+					case KEY.LEFT:   actions.push(DIR.LEFT);	break;
+					case KEY.RIGHT:  actions.push(DIR.RIGHT);	break;
+					case KEY.UP:     actions.push(DIR.UP);		break;
+					case KEY.DOWN:   actions.push(DIR.DOWN);	break;
+				}
+			} else {
+				switch(ev.keyCode) {
+					case KEY.SPACE: play();
 				}
 			}
-			else if (ev.keyCode == KEY.SPACE) {
-				play();
-				handled = true;
+			switch(ev.keyCode) {
+				// case KEY.M: 
+				// 	if (muted) {
+				// 		muted = false;
+				// 		playSound('music'); 
+				// 	}  else {
+				// 		muted = true;
+				// 		stopSound('music'); 
+				// 	} break;
+				case KEY.P: playing = !playing; playSound('button'); break;
 			}
-			if (handled)
-				ev.preventDefault(); // prevent arrow keys from scrolling the page (supported in IE9+ and all other browsers)
+
+			ev.preventDefault(); // prevent arrow keys from scrolling the page (supported in IE9+ and all other browsers)
 		}
 
 		//-------------------------------------------------------------------------
 		// SOUND
 		//-------------------------------------------------------------------------
-		var audios
-		function setupSound() {
-			//audios  = [new Audio(), new Audio(), new Audio(), new Audio(), new Audio()]
-		}
+		
+		let audioMap = []
 
+		function playSound(clip, volume = 1, defer = false, layer = false, loop = false, format='.wav') {
+			if (muted) {
+				return
+			}
 
-		function playSound(clip, volume = 1, loop = false) {
-			audio = new Audio();
+			audio = audioMap[clip]
+			if (defer === true && audio != null && audio.paused === false) {
+				return
+			}
+
+			if (audio == null || layer === true) {
+				audio = new Audio();
+				audio.src = 'aud/' + clip + format
+				audioMap[clip] = audio;
+			}
+
+			audio.currentTime = 0
 			audio.volume = volume
-			audio.src = 'sounds/' + clip + '.wav'
-			var playingAudios = soundMap.get(clip)
 
 			if (loop) {
-				audio.onended = function(){
-					playSound(clip, volume, true)
+				audio.onended = function() {
+					playSound(clip, volume, false, false, true, '.mp3')
 				};
-			} else {
-				
 			}
-			var playingAudios = soundMap.get(clip)
-			if (playingAudios == null) {
-				soundMap.set(clip, [])
-				playingAudios = soundMap.get(clip)
-			} 
-			if (playingAudios.length > 0) {
-				playingAudios[0].pause()
-				playingAudios.splice(0, 1)
-			}
-			playingAudios.push(audio)
+
 			audio.play();
 		}
 
+		function stopSound(clip) {
+			let audio = audioMap[clip]
+			
+			audio.pause()
+		}
 
 		//-------------------------------------------------------------------------
 		// GAME LOGIC
 		//-------------------------------------------------------------------------
-
+		
 		function play() {
-			playSound("music", .25, true)
-			playSound("start");
-			//hide('start'); 
-			reset();
 			playing = true;
+			playSound('music', .6, false, false, true, '.mp3')
+			playSound('start');
+			start = get('start')
+			if (start != undefined) {
+				start.parentNode.removeChild(start)
+			}
+			get('score').style.visibility = 'visible'
+			reset();
+			console.log('hmm')
+			drawUpcoming();
+			score = 0;
 		}
 
 
 		function lose() {
-			playSound('lose', .2);
-
-			var gehnRemarks = ["son","farewell","thought","end"]
-			
-			playSound(gehnRemarks[Math.round(random(-1,3))])
-			show('start'); 
+			playing = false; 
+			clearUpcoming()
+			stopSound('music')
+			playSound('lose', .5);
 			setVisualScore(); 
-			playing = false; }
-
-		function setVisualScore(n)      { vscore = n || score; invalidateScore(); }
-		function setScore(n)            { score = n; setVisualScore(n);  }
-		function addScore(n)            { score = score + n;   }
-		function clearScore()           { setScore(0); }
-		function clearRows()            { setRows(0); }
-		function setRows(n)             { rows = n; step = Math.max(speed.min, speed.start - (speed.decrement*rows)); invalidateRows(); }
-		function addRows(n)             { setRows(rows + n); }
-		function getBlock(x,y)          { return (blocks && blocks[x] ? blocks[x][y] : null); }
-		function setBlock(x,y,type)     { blocks[x] = blocks[x] || []; blocks[x][y] = type; invalidate(); }
-		function clearBlocks()          { blocks = []; invalidate(); }
-		function clearActions()         { actions = []; }
-		function setCurrentPiece(piece) { current = piece || randomPiece(); invalidate();     }
-		function setNextPiece(piece)    { next    = piece || randomPiece(); invalidateNext(); }
+			setTimeout(function(){
+    			playSound("gehn/" + gehnRemarks[Math.round(random(0, gehnRemarks.length - 1))])
+			}, 1000);
+		}
 
 		function reset() {
 			dt = 0;
+			digits = 1;
 			clearActions();
 			clearBlocks();
 			clearRows();
@@ -346,7 +346,9 @@ ___|  |____/       )____|  |____| |_\ \_(      )_(      (__
 		function update(idt) {
 			if (playing) {
 				if (vscore < score)
-					setVisualScore(vscore + 1);
+					setVisualScore(vscore + 1 + Math.ceil(score / Math.max(vscore, 1)));
+				if (vscore > score) 
+					setVisualScore(score)
 				handle(actions.shift());
 				dt = dt + idt;
 				if (dt > step) {
@@ -368,37 +370,53 @@ ___|  |____/       )____|  |____| |_\ \_(      )_(      (__
 		function move(dir) {
 			var x = current.x, y = current.y;
 			switch(dir) {
-				case DIR.RIGHT: x = x + 1; playSound("thwap"); break;
-				case DIR.LEFT:  x = x - 1; playSound("thwap"); break;
-				case DIR.DOWN:  y = y + 1; playSound("move"); break;
+				case DIR.RIGHT: x = x + 1; break;
+				case DIR.LEFT:  x = x - 1; break;
+				case DIR.DOWN:  y = y + 1; break;
 			}
 			if (!occupied(current.type, x, y, current.dir)) {
-				
+				switch(dir) {
+					case DIR.RIGHT: playSound("thwap", .5, false, true); break;
+					case DIR.LEFT:  playSound("thwap", .5, false, true); break;
+					case DIR.DOWN:  playSound("move", .2); break;
+				}
 				current.x = x;
 				current.y = y;
 				invalidate();
-				
 				return true;
 			} else {
 				if (dir != DIR.DOWN) {
-					playSound("blocked", .5)
+					playSound("blocked", .4, true)
 				}
 				return false;
 			}
 		}
 
 		function rotate() {
-			var newdir = (current.dir == DIR.MAX ? DIR.MIN : current.dir + 1);
-			if (!occupied(current.type, current.x, current.y, newdir)) {
+			if (current.type.number == 3 || current.type.number == 5) {
 				playSound('rotate', .5);
-				current.dir = newdir;
-				invalidate();
+				return
 			}
+
+			var newdir = (current.dir == DIR.MAX ? DIR.MIN : current.dir + 1);
+			var nudges = [0, 1, -1] //try nudging to left and right if needed
+
+			for (var i = 0; i < nudges.length; i++) {
+				nudge = nudges[i]
+				if (!occupied(current.type, current.x + nudge, current.y, newdir)) {
+					playSound('rotate', .5);
+					current.dir = newdir;
+					current.x = current.x + nudge;
+					invalidate();
+					return;
+				}
+			}
+			playSound('stuck4', .9, true)
 		}
 
 		function drop() {
 			if (!move(DIR.DOWN)) {
-				playSound('drop', .5);
+				playSound('drop', .8);
 				dropPiece();
 				removeLines();
 				setCurrentPiece(next);
@@ -406,34 +424,51 @@ ___|  |____/       )____|  |____| |_\ \_(      )_(      (__
 				clearActions();
 				if (occupied(current.type, current.x, current.y, current.dir)) {
 					lose();
+				} else {
+					drawUpcoming();
 				}
 			}
 		}
 
 		function dropPiece() {
-			eachblock(current.type, current.x, current.y, current.dir, function(x, y) {
-				setBlock(x, y, current.type);
+			eachBlock(current.type, current.x, current.y, current.dir, function(x, y) {
+				setBlock(x, y, current.type.color);
 			});
 		}
 
 		function removeLines() {
 			var x, y, complete, n = 0;
-			for(y = ny ; y > 0 ; --y) {
+			for (y = ny ; y > 0 ; --y) {
 				complete = true;
-				for(x = 0 ; x < nx ; ++x) {
-					if (!getBlock(x, y))
+				for (x = 0 ; x < nx ; ++x) {
+					if (getBlock(x, y) == null) {
 						complete = false;
+						break
+					}
 				}
 				if (complete) {
 					removeLine(y);
-					y = y + 1; // recheck same line
+					y = y + 1;
 					n++;
 				}
 			}
 			if (n > 0) {
-				playSound('row' + n);
+				playSound('ding', .25)
+				//playSound('drop', 2);
 				addRows(n);
-				addScore(Math.pow(5, n));
+				if (n == 1) {	
+					score += 25
+					playSound('rows/knock');
+				} else if (n == 2) {
+					score += 55
+					playSound('rows/thud');
+				} else if (n == 3) {
+					score += 125
+					playSound('rows/wahrk');
+				} else if (n == 4) {
+					score += 500
+					playSound('rows/waffle');
+				}
 			}
 		}
 
@@ -444,6 +479,56 @@ ___|  |____/       )____|  |____| |_\ \_(      )_(      (__
 					setBlock(x, y, (y == 0) ? null : getBlock(x, y-1));
 			}
 		}
+
+		function eachBlock(type, x, y, dir, fn) {
+			var bit, result, row = 0, col = 0,
+			blocks = type.blocks[dir];
+			for(bit = type.bit; bit > 0 ; bit = bit / 2) {
+				if (blocks & bit) {
+					fn(x + col, y + row);
+				}
+				if (++col == type.size) {
+					col = 0;
+					row++;
+				}
+			}
+		}
+
+		function occupied(type, x, y, dir) {
+			var result = false
+			eachBlock(type, x, y, dir, function(x, y) {
+				if ((x < 0) || (x >= nx) || (y < -5) || (y >= ny) || getBlock(x,y)) {
+					result = true;
+				}
+			});
+			return result;
+		}
+
+		function randomPiece() {
+			if (bag.length == 0) {
+				for (i = 0; i < 5 * 5; i++) {
+					bag.push(i % 5)
+				}
+			}
+			var index = bag.splice(random(0, bag.length-1), 1)[0];
+			type = types[index];
+			return { type: type, dir: DIR.UP, x: type.start.x, y: type.start.y };
+		}
+
+
+		function setVisualScore(n)      { vscore = n || score; invalidateScore(); }
+		function setScore(n)            { score = n; setVisualScore(n); }
+		function addScore(n)            { score = score + n;   }
+		function clearScore()           { resetScore()}
+		function clearRows()            { setRows(0); }
+		function setRows(n)             { rows = n; step = Math.max(speed.min, speed.start - (speed.decrement*(score/3000))); invalidateRows(); }
+		function addRows(n)             { setRows(rows + n); }
+		function getBlock(x,y)          { return (blocks && blocks[x] ? blocks[x][y] : null); }
+		function setBlock(x,y,color)    { blocks[x] = blocks[x] || []; blocks[x][y] = color; invalidate(); }
+		function clearBlocks()          { blocks = []; invalidate(); }
+		function clearActions()         { actions = []; }
+		function setCurrentPiece(piece) { current = piece || randomPiece(); invalidate();     }
+		function setNextPiece(piece)    { next    = piece || randomPiece(); invalidateNext(); }
 
 		//-------------------------------------------------------------------------
 		// RENDERING
@@ -459,98 +544,108 @@ ___|  |____/       )____|  |____| |_\ \_(      )_(      (__
 		function draw() {
 			ctx.save();
 			ctx.lineWidth = 1;
-			ctx.translate(0.5, 0.5); // for crisp 1px black lines
+			ctx.translate(0.5, 0.5);
 			drawCourt();
-			drawNext();
 			drawScore();
 			ctx.restore();
 		}
 
 		function drawCourt() {
-			if (invalid.court) {
-				ctx.clearRect(0, 0, canvas.width, canvas.height);
-				if (playing)
+			if (invalid.court) {	
+				ctx.clearRect(xOffset, yOffset, gridWidth, gridHeight);
+				if (playing) {
 					drawPiece(ctx, current.type, current.x, current.y, current.dir);
+				}
 				var x, y, block;
 				for(y = 0 ; y < ny ; y++) {
 					for (x = 0 ; x < nx ; x++) {
-						if (block = getBlock(x,y))
-							drawBlock(ctx, x, y, block.color);
+						color = getBlock(x,y);
+						if (color != null) {
+							drawBlock(ctx, x, y, color);
+						}
 					}
 				}
-				ctx.strokeRect(0, 0, nx*dx - 1, ny*dy - 1); // court boundary
 				invalid.court = false;
 			}
 		}
 
-		function drawNext() {
-			upcoming.src = 'pics/islands/island' + next.type.index + '.png'
-			/*
-			if (invalid.next) {
-				var padding = 1;
-				uctx.save();
-				uctx.translate(0.5, 0.5);
-				uctx.clearRect(0, 0, nu*dx, nu*dy);
-				drawPiece(uctx, next.type, padding, padding, next.dir);
-				uctx.strokeStyle = 'black';
-				uctx.strokeRect(0, 0, nu*dx - 1, nu*dy - 1);
-				uctx.restore();
-				invalid.next = false;
-			}*/
-		}
-
-		function drawScore() {
-			if (invalid.score) {
-				tempVscore = vscore
-				for (i = 5; i > 0; i--) {
-					get("score" + i).src = "pics/digits/Dni" + Math.floor(tempVscore) % 25 + ".png"
-					tempVscore /= 25
-				}
-				invalid.score = false;
+		function drawUpcoming() {
+			if (!playing) {
+				return
+			}
+			upcoming.src = 'img/preview/' + next.type.number + '.png';
+			upcoming.onload = function(){
+				ctx.drawImage(upcoming, 0, 0, canvas.width, canvas.height);
 			}
 		}
 
+		function clearUpcoming() {
+			ctx.clearRect(0, 0, canvas.width, canvas.height)
+		}
+
 		function drawPiece(ctx, type, x, y, dir) {
-			eachblock(type, x, y, dir, function(x, y) {
+			eachBlock(type, x, y, dir, function(x, y) {
 				drawBlock(ctx, x, y, type.color);
 			});
 		}
 
 		function drawBlock(ctx, x, y, color) {
-			//if (getBlock(x, y) != null && getBlock(x, y).color == color) {
-			//	return;
-			//}
-
-			x = x*dx + dx/2;
-			y = y*dy + dy/2;
-			/*
-			base_image = new Image();
-			base_image.src = 'pics/marbles/' + color +'.png';
-			base_image.height = '100%';
-			base_image.width = '1000%';
-			base_image.onload = function(){
-				ctx.drawImage(base_image, x, y, 15, 15);
+			if (y < 0) {
+				return;
 			}
-			*/
-			var grd = ctx.createRadialGradient(x, y, .275*dx, x+.35*dx, y-.35*dy, .01*dx);
-			grd.addColorStop(0, color);
-			grd.addColorStop(1, "white");
+			x = xOffset + x*blockSize + blockSize/2;
+			y = yOffset + y*blockSize + blockSize/2;
+			
+			var grd = ctx.createRadialGradient(x, y, .275*blockSize, x+.35*blockSize, y-.35*blockSize, .01*blockSize);
+			
+			colors = colorMap[color];
 
-			// Fill with gradient
+			grd.addColorStop(.1, colors[0]);
+			grd.addColorStop(.5, colors[1]);
+			grd.addColorStop(.8, colors[2]);
 			ctx.fillStyle = grd;
 			ctx.beginPath()
-			ctx.arc(x, y, .275*dx, 0, 2 * Math.PI, false);
+			ctx.arc(x, y, .275*blockSize, 0, 2 * Math.PI, false);2
 			ctx.fill()
-
 		}
 
-		//-------------------------------------------------------------------------
-		// FINALLY, lets run the game
-		//-------------------------------------------------------------------------
+		function drawScore() {
+			if (invalid.score) {
+				tempVscore = vscore
+				digit = 0;
+				while (tempVscore >= 1) {
+					if (get('digit' + digit) == undefined) {
+						addDigit()
+					}
+					get('digit' + digit).src = 'img/digits/Dni' + Math.floor(tempVscore) % 25 + '.png'
+					tempVscore /= 25
+					digit++
+				}
+				invalid.score = false;
+			}
+		}
+
+		function addDigit() {
+			let newDigit = document.createElement("img");
+			newDigit.setAttribute("id", "digit" + digits);
+			newDigit.setAttribute("class", "digit");
+			newDigit.setAttribute("src", "img/digits/Dni0.png");
+			let scoreDiv = get('score')
+			digits++;
+			scoreDiv.insertBefore(newDigit, scoreDiv.children[1])
+		}
+
+		function resetScore() {
+			setScore(0)
+			let digits = get('score').getElementsByClassName('digit')
+			while (digits.length > 1) {
+				digits[0].parentNode.removeChild(digits[0]);
+			}
+			digits[0].src = 'img/digits/Dni0.png'
+			digits = 1
+		}
 
 		run();
-
 	</script>
-
 </body>
 </html>
