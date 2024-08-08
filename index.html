@@ -9,8 +9,11 @@
 
 
 //TODO- 
+// easiness mode? diff shuffle strat?
 
-//
+// fix strange case bug - when piling beyond edge, only die on later turn
+//generally should die if any tiles beyond edge
+
 //higher image quality
 //higher quality gehn clips
 //sound volumes
@@ -79,573 +82,576 @@
 			<img src="img/digits/DniLeft.png"><img id="digit0" class="digit" src="img/digits/Dni0.png"><img src="img/digits/DniRight.png">
 		</div>
 	</div>
-	<script>
+<script>
+if (location.hostname === "") {
+    document.title = "." + document.title
+}
 
-		//-------------------------------------------------------------------------
-		// base helper methods
-		//-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
+// base helper methods
+//-------------------------------------------------------------------------
 
-		function get(id)        		 { return document.getElementById(id);  }
-		function timestamp()           { return new Date().getTime();                             }
-		function random(min, max)      { return (min + (Math.random() * (max - min)));            }
-		function randomChoice(choices) { return choices[Math.round(random(0, choices.length-1))]; }
+function get(id)        		 { return document.getElementById(id);  }
+function timestamp()           { return new Date().getTime();                             }
+function random(min, max)      { return (min + (Math.random() * (max - min)));            }
+function randomChoice(choices) { return choices[Math.round(random(0, choices.length-1))]; }
 
-		if (!window.requestAnimationFrame) { // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
-			window.requestAnimationFrame = window.webkitRequestAnimationFrame ||
-				window.mozRequestAnimationFrame    ||
-				window.oRequestAnimationFrame      ||
-				window.msRequestAnimationFrame     ||
-				function(callback, element) {
-					window.setTimeout(callback, 1000 / 60);
-				}
+if (!window.requestAnimationFrame) { // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+	window.requestAnimationFrame = window.webkitRequestAnimationFrame ||
+		window.mozRequestAnimationFrame    ||
+		window.oRequestAnimationFrame      ||
+		window.msRequestAnimationFrame     ||
+		function(callback, element) {
+			window.setTimeout(callback, 1000 / 60);
 		}
+}
 
-		//-------------------------------------------------------------------------
-		// game constants
-		//-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
+// game constants
+//-------------------------------------------------------------------------
 
-		var KEY		= { ESC: 27, SPACE: 32, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, M: 77, P: 80 },
-		DIR			= { UP: 0, RIGHT: 1, DOWN: 2, LEFT: 3, MIN: 0, MAX: 3 },
-		canvas		= get('canvas'),
-		ctx			= canvas.getContext('2d'),
-		speed		= { start: .5, decrement: 0.005, min: 0.1 }, // how long before piece drops by 1 row (seconds)
-		nx			= 10, // width of tetris court (in blocks)
-		ny			= 20, // height of tetris court (in blocks)
-		sound		= get('sound');
-		soundSource	= get('soundSource');
-		upcoming = new Image();
+var KEY		= { ESC: 27, SPACE: 32, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, M: 77, P: 80 },
+DIR			= { UP: 0, RIGHT: 1, DOWN: 2, LEFT: 3, MIN: 0, MAX: 3 },
+canvas		= get('canvas'),
+ctx			= canvas.getContext('2d'),
+speed		= { start: .5, decrement: 0.005, min: 0.1 }, // how long before piece drops by 1 row (seconds)
+nx			= 10, // width of tetris court (in blocks)
+ny			= 20, // height of tetris court (in blocks)
+sound		= get('sound');
+soundSource	= get('soundSource');
+upcoming = new Image();
 
-		types = [
-			//temple:
-			{ blocks: [0b0000011001110000, 0b0000011001100100, 0b0000111001100000, 0b0010011001100000],
-				bit: '0b1000000000000000',
-				size: 4,
-				color: 'green',
-				start: { x: 3, y: -3 },
-				number: 1
-			},
-			//jungle:
-			{ blocks: [0b0000011110111100111000000, 0b0011001110011100111000000, 0b0000001110011110111100000, 0b0000001110011100111001100],
-				bit: '0b1000000000000000000000000',
-				size: 5,
-				color: 'red',
-				start: { x: 3, y: -4 },
-				number: 2
-			},
-			//boiler:
-			{ blocks:  [0b1111],
-				bit: '0b1000',
-				size: 2,
-				color: 'purple',
-				start: { x: 4, y: -2 },
-				number: 3
-			},
-			//survey:
-			{ blocks: [0b010010011, 0b000111100, 0b110010010, 0b001111000],
-				bit: '0b100000000',
-				size: 3,
-				color: 'orange',
-				start: { x: 3, y: -3 },
-				number: 4
-			},
-			//prison:
-			{ blocks: [0b1],
-				bit: '0b1',
-				size: 1,
-				color: 'blue',
-				start: {x: 4, y: -1 },
-				number: 5
-			}
-		]
+types = [
+	//temple:
+	{ blocks: [0b0000011001110000, 0b0000011001100100, 0b0000111001100000, 0b0010011001100000],
+		bit: '0b1000000000000000',
+		size: 4,
+		color: 'green',
+		start: { x: 3, y: -3 },
+		number: 1
+	},
+	//jungle:
+	{ blocks: [0b0000011110111100111000000, 0b0011001110011100111000000, 0b0000001110011110111100000, 0b0000001110011100111001100],
+		bit: '0b1000000000000000000000000',
+		size: 5,
+		color: 'red',
+		start: { x: 3, y: -4 },
+		number: 2
+	},
+	//boiler:
+	{ blocks:  [0b1111],
+		bit: '0b1000',
+		size: 2,
+		color: 'purple',
+		start: { x: 4, y: -2 },
+		number: 3
+	},
+	//survey:
+	{ blocks: [0b010010011, 0b000111100, 0b110010010, 0b001111000],
+		bit: '0b100000000',
+		size: 3,
+		color: 'orange',
+		start: { x: 3, y: -3 },
+		number: 4
+	},
+	//prison:
+	{ blocks: [0b1],
+		bit: '0b1',
+		size: 1,
+		color: 'blue',
+		start: {x: 4, y: -1 },
+		number: 5
+	}
+]
 
-		colorMap = {
-			'green':	['rgb(41, 123, 16)', 'rgb(0, 239, 0)', 'rgb(206, 255, 181)'],
-			'red': 		['rgb(123, 0, 0)', 'rgb(239, 0, 0)', 'rgb(255, 198, 198)'],
-			'purple': 	['rgb(82, 0, 140)', 'rgb(173, 0, 189)', 'rgb(222, 156, 255)'],
-			'orange': 	['rgb(140, 74, 0)', 'rgb(255, 123, 0)', 'rgb(255, 255, 170)'],
-			'blue': 	['rgb(0, 0, 132)', 'rgb(0, 0, 247)', 'rgb(82, 181, 222)']
+colorMap = {
+	'green':	['rgb(41, 123, 16)', 'rgb(0, 239, 0)', 'rgb(206, 255, 181)'],
+	'red': 		['rgb(123, 0, 0)', 'rgb(239, 0, 0)', 'rgb(255, 198, 198)'],
+	'purple': 	['rgb(82, 0, 140)', 'rgb(173, 0, 189)', 'rgb(222, 156, 255)'],
+	'orange': 	['rgb(140, 74, 0)', 'rgb(255, 123, 0)', 'rgb(255, 255, 170)'],
+	'blue': 	['rgb(0, 0, 132)', 'rgb(0, 0, 247)', 'rgb(82, 181, 222)']
+}
+
+gehnRemarks = [
+	"back", "changed", "disappointed", "end", "farewell", 
+	"foolishness", "recovered", "son", "thought", "trap"
+]
+
+
+
+
+//-------------------------------------------------------------------------
+// game variables (initialized during reset)
+//-------------------------------------------------------------------------
+
+var blockSize,        // pixel size of a single tetris block
+	blocks,        // 2 dimensional array (nx*ny) representing tetris court - either empty block or occupied by a 'piece'
+	actions,       // queue of user actions (inputs)
+	playing,       // true|false - game is in progress
+	dt,            // time since starting this game
+	current,       // the current piece
+	next,          // the next piece
+	score,         // the current score
+	vscore,        // the currently displayed score (it catches up to score in small chunks - like a spinning slot machine)
+	rows,          // number of completed rows in the current game
+	step;          // how long before current piece drops by 1 row
+
+var digits = 1;
+var muted = false
+var bag = [];
+
+
+//-------------------------------------------------------------------------
+// GAME LOOP
+//-------------------------------------------------------------------------
+
+function run() {
+	addEvents(); // attach keydown and resize events
+	var last = now = timestamp();
+	function frame() {
+		now = timestamp();
+		update(Math.min(1, (now - last) / 1000.0)); // using requestAnimationFrame have to be able to handle large delta's caused when it 'hibernates' in a background or non-visible tab
+		draw();
+		last = now;
+		requestAnimationFrame(frame, canvas);
+	}
+	resize(); // setup all our sizing information
+	reset();  // reset the per-game variables
+	frame();  // start the first frame
+}
+
+function addEvents() {
+	document.addEventListener('keydown', keydown, false);
+	window.addEventListener('resize', resize, false);
+}
+
+function resize(event) {
+	canvas.width   = canvas.clientWidth;
+	canvas.height  = canvas.clientHeight;
+	
+	gridWidth = canvas.width * .577
+	gridHeight = gridWidth * 2
+	xOffset = (canvas.width - gridWidth)/2
+	yOffset = canvas.height * .333
+	blockSize = gridWidth / nx; // pixel size of a single tetris block
+	
+	invalidate();
+	invalidateNext();
+}
+
+function keydown(ev) {
+	if (playing) {
+		switch(ev.keyCode) {
+			case KEY.LEFT:   actions.push(DIR.LEFT);	break;
+			case KEY.RIGHT:  actions.push(DIR.RIGHT);	break;
+			case KEY.UP:     actions.push(DIR.UP);		break;
+			case KEY.DOWN:   actions.push(DIR.DOWN);	break;
 		}
-
-		gehnRemarks = [
-			"back","changed","disappointed", "end", "farewell", 
-			"foolishness", "recovered", "son", "thought", "trap"
-		]
-
-
-
-
-		//-------------------------------------------------------------------------
-		// game variables (initialized during reset)
-		//-------------------------------------------------------------------------
-
-		var blockSize,        // pixel size of a single tetris block
-			blocks,        // 2 dimensional array (nx*ny) representing tetris court - either empty block or occupied by a 'piece'
-			actions,       // queue of user actions (inputs)
-			playing,       // true|false - game is in progress
-			dt,            // time since starting this game
-			current,       // the current piece
-			next,          // the next piece
-			score,         // the current score
-			vscore,        // the currently displayed score (it catches up to score in small chunks - like a spinning slot machine)
-			rows,          // number of completed rows in the current game
-			step;          // how long before current piece drops by 1 row
-
-		var digits = 1;
-		var muted = false
-		var bag = [];
-		
-
-		//-------------------------------------------------------------------------
-		// GAME LOOP
-		//-------------------------------------------------------------------------
-
-		function run() {
-			addEvents(); // attach keydown and resize events
-			var last = now = timestamp();
-			function frame() {
-				now = timestamp();
-				update(Math.min(1, (now - last) / 1000.0)); // using requestAnimationFrame have to be able to handle large delta's caused when it 'hibernates' in a background or non-visible tab
-				draw();
-				last = now;
-				requestAnimationFrame(frame, canvas);
-			}
-			resize(); // setup all our sizing information
-			reset();  // reset the per-game variables
-			frame();  // start the first frame
+	} else {
+		switch(ev.keyCode) {
+			case KEY.SPACE: play();
 		}
+	}
+	switch(ev.keyCode) {
+		// case KEY.M: 
+		// 	if (muted) {
+		// 		muted = false;
+		// 		playSound('music'); 
+		// 	}  else {
+		// 		muted = true;
+		// 		stopSound('music'); 
+		// 	} break;
+		case KEY.P: playing = !playing; playSound('button'); break;
+	}
 
-		function addEvents() {
-			document.addEventListener('keydown', keydown, false);
-			window.addEventListener('resize', resize, false);
+	ev.preventDefault(); // prevent arrow keys from scrolling the page (supported in IE9+ and all other browsers)
+}
+
+//-------------------------------------------------------------------------
+// SOUND
+//-------------------------------------------------------------------------
+
+let audioMap = []
+
+function playSound(clip, volume = 1, defer = false, layer = false, loop = false, format='.wav') {
+	if (muted) {
+		return
+	}
+
+	audio = audioMap[clip]
+	if (defer === true && audio != null && audio.paused === false) {
+		return
+	}
+
+	if (audio == null || layer === true) {
+		audio = new Audio();
+		audio.src = 'aud/' + clip + format
+		audioMap[clip] = audio;
+	}
+
+	audio.currentTime = 0
+	audio.volume = volume
+
+	if (loop) {
+		audio.onended = function() {
+			playSound(clip, volume, false, false, true, '.mp3')
+		};
+	}
+
+	audio.play();
+}
+
+function stopSound(clip) {
+	let audio = audioMap[clip]
+	
+	audio.pause()
+}
+
+//-------------------------------------------------------------------------
+// GAME LOGIC
+//-------------------------------------------------------------------------
+
+function play() {
+	playing = true;
+	playSound('music', .6, false, false, true, '.mp3')
+	playSound('start');
+	start = get('start')
+	if (start != undefined) {
+		start.parentNode.removeChild(start)
+	}
+	get('score').style.visibility = 'visible'
+	reset();
+	drawUpcoming();
+	score = 0;
+}
+
+
+function lose() {
+	playing = false; 
+	clearUpcoming()
+	stopSound('music')
+	playSound('lose', .5);
+	setVisualScore(); 
+	setTimeout(function(){
+		playSound("gehn/" + gehnRemarks[Math.round(random(0, gehnRemarks.length - 1))])
+	}, 1000);
+}
+
+function reset() {
+	dt = 0;
+	digits = 1;
+	clearActions();
+	clearBlocks();
+	clearRows();
+	clearScore();
+	setCurrentPiece(next);
+	setNextPiece();
+}
+
+function update(idt) {
+	if (playing) {
+		if (vscore < score)
+			setVisualScore(vscore + 1 + Math.ceil(score / Math.max(vscore, 1)));
+		if (vscore > score) 
+			setVisualScore(score)
+		handle(actions.shift());
+		dt = dt + idt;
+		if (dt > step) {
+			dt = dt - step;
+			drop();
 		}
+	}
+}
 
-		function resize(event) {
-			canvas.width   = canvas.clientWidth;
-			canvas.height  = canvas.clientHeight;
-			
-			gridWidth = canvas.width * .577
-			gridHeight = gridWidth * 2
-			xOffset = (canvas.width - gridWidth)/2
-			yOffset = canvas.height * .333
-			blockSize = gridWidth / nx; // pixel size of a single tetris block
-			
+function handle(action) {
+	switch(action) {
+		case DIR.LEFT:  move(DIR.LEFT);  break;
+		case DIR.RIGHT: move(DIR.RIGHT); break;
+		case DIR.UP:    rotate();        break;
+		case DIR.DOWN:  drop();          break;
+	}
+}
+
+function move(dir) {
+	var x = current.x, y = current.y;
+	switch(dir) {
+		case DIR.RIGHT: x = x + 1; break;
+		case DIR.LEFT:  x = x - 1; break;
+		case DIR.DOWN:  y = y + 1; break;
+	}
+	if (!occupied(current.type, x, y, current.dir)) {
+		switch(dir) {
+			case DIR.RIGHT: playSound("thwap", .5, false, true); break;
+			case DIR.LEFT:  playSound("thwap", .5, false, true); break;
+			case DIR.DOWN:  playSound("move", .2); break;
+		}
+		current.x = x;
+		current.y = y;
+		invalidate();
+		return true;
+	} else {
+		if (dir != DIR.DOWN) {
+			playSound("blocked", .4, true)
+		}
+		return false;
+	}
+}
+
+function rotate() {
+	if (current.type.number == 3 || current.type.number == 5) {
+		playSound('rotate', .5);
+		return
+	}
+
+	var newdir = (current.dir == DIR.MAX ? DIR.MIN : current.dir + 1);
+	var nudges = [0, 1, -1] //try nudging to left and right if needed
+
+	for (var i = 0; i < nudges.length; i++) {
+		nudge = nudges[i]
+		if (!occupied(current.type, current.x + nudge, current.y, newdir)) {
+			playSound('rotate', .5);
+			current.dir = newdir;
+			current.x = current.x + nudge;
 			invalidate();
-			invalidateNext();
+			return;
 		}
+	}
+	playSound('stuck4', .9, true)
+}
 
-		function keydown(ev) {
-			if (playing) {
-				switch(ev.keyCode) {
-					case KEY.LEFT:   actions.push(DIR.LEFT);	break;
-					case KEY.RIGHT:  actions.push(DIR.RIGHT);	break;
-					case KEY.UP:     actions.push(DIR.UP);		break;
-					case KEY.DOWN:   actions.push(DIR.DOWN);	break;
-				}
-			} else {
-				switch(ev.keyCode) {
-					case KEY.SPACE: play();
-				}
-			}
-			switch(ev.keyCode) {
-				// case KEY.M: 
-				// 	if (muted) {
-				// 		muted = false;
-				// 		playSound('music'); 
-				// 	}  else {
-				// 		muted = true;
-				// 		stopSound('music'); 
-				// 	} break;
-				case KEY.P: playing = !playing; playSound('button'); break;
-			}
-
-			ev.preventDefault(); // prevent arrow keys from scrolling the page (supported in IE9+ and all other browsers)
-		}
-
-		//-------------------------------------------------------------------------
-		// SOUND
-		//-------------------------------------------------------------------------
-		
-		let audioMap = []
-
-		function playSound(clip, volume = 1, defer = false, layer = false, loop = false, format='.wav') {
-			if (muted) {
-				return
-			}
-
-			audio = audioMap[clip]
-			if (defer === true && audio != null && audio.paused === false) {
-				return
-			}
-
-			if (audio == null || layer === true) {
-				audio = new Audio();
-				audio.src = 'aud/' + clip + format
-				audioMap[clip] = audio;
-			}
-
-			audio.currentTime = 0
-			audio.volume = volume
-
-			if (loop) {
-				audio.onended = function() {
-					playSound(clip, volume, false, false, true, '.mp3')
-				};
-			}
-
-			audio.play();
-		}
-
-		function stopSound(clip) {
-			let audio = audioMap[clip]
-			
-			audio.pause()
-		}
-
-		//-------------------------------------------------------------------------
-		// GAME LOGIC
-		//-------------------------------------------------------------------------
-		
-		function play() {
-			playing = true;
-			playSound('music', .6, false, false, true, '.mp3')
-			playSound('start');
-			start = get('start')
-			if (start != undefined) {
-				start.parentNode.removeChild(start)
-			}
-			get('score').style.visibility = 'visible'
-			reset();
-			console.log('hmm')
+function drop() {
+	if (!move(DIR.DOWN)) {
+		playSound('drop', .8);
+		dropPiece();
+		removeLines();
+		setCurrentPiece(next);
+		setNextPiece();
+		clearActions();
+		if (occupied(current.type, current.x, current.y, current.dir)) {
+			lose();
+		} else {
 			drawUpcoming();
-			score = 0;
 		}
+	}
+}
 
+function dropPiece() {
+	eachBlock(current.type, current.x, current.y, current.dir, function(x, y) {
+		setBlock(x, y, current.type.color);
+	});
+}
 
-		function lose() {
-			playing = false; 
-			clearUpcoming()
-			stopSound('music')
-			playSound('lose', .5);
-			setVisualScore(); 
-			setTimeout(function(){
-    			playSound("gehn/" + gehnRemarks[Math.round(random(0, gehnRemarks.length - 1))])
-			}, 1000);
+function removeLines() {
+	var x, y, complete, n = 0;
+	for (y = ny ; y > 0 ; --y) {
+		complete = true;
+		for (x = 0 ; x < nx ; ++x) {
+			if (getBlock(x, y) == null) {
+				complete = false;
+				break
+			}
 		}
-
-		function reset() {
-			dt = 0;
-			digits = 1;
-			clearActions();
-			clearBlocks();
-			clearRows();
-			clearScore();
-			setCurrentPiece(next);
-			setNextPiece();
+		if (complete) {
+			removeLine(y);
+			y = y + 1;
+			n++;
 		}
+	}
+	if (n > 0) {
+		playSound('ding', .25)
+		//playSound('drop', 2);
+		addRows(n);
+		if (n == 1) {	
+			score += 25
+			playSound('rows/knock');
+		} else if (n == 2) {
+			score += 55
+			playSound('rows/thud');
+		} else if (n == 3) {
+			score += 125
+			playSound('rows/wahrk');
+		} else if (n == 4) {
+			score += 500
+			playSound('rows/waffle');
+		}
+	}
+}
 
-		function update(idt) {
-			if (playing) {
-				if (vscore < score)
-					setVisualScore(vscore + 1 + Math.ceil(score / Math.max(vscore, 1)));
-				if (vscore > score) 
-					setVisualScore(score)
-				handle(actions.shift());
-				dt = dt + idt;
-				if (dt > step) {
-					dt = dt - step;
-					drop();
+function removeLine(n) {
+	var x, y;
+	for(y = n ; y >= 0 ; --y) {
+		for(x = 0 ; x < nx ; ++x)
+			setBlock(x, y, (y == 0) ? null : getBlock(x, y-1));
+	}
+}
+
+function eachBlock(type, x, y, dir, fn) {
+	var bit, result, row = 0, col = 0,
+	blocks = type.blocks[dir];
+	for(bit = type.bit; bit > 0 ; bit = bit / 2) {
+		if (blocks & bit) {
+			fn(x + col, y + row);
+		}
+		if (++col == type.size) {
+			col = 0;
+			row++;
+		}
+	}
+}
+
+function occupied(type, x, y, dir) {
+	var result = false
+	eachBlock(type, x, y, dir, function(x, y) {
+		if ((x < 0) || (x >= nx) || (y < -5) || (y >= ny) || getBlock(x,y)) {
+			result = true;
+		}
+	});
+	return result;
+}
+
+function randomPiece() {
+	if (bag.length == 0) {
+		for (i = 0; i < 5 * 5; i++) {
+			bag.push(i % 5)
+		}
+	}
+	var index = bag.splice(random(0, bag.length-1), 1)[0];
+	type = types[index];
+	return { type: type, dir: DIR.UP, x: type.start.x, y: type.start.y };
+}
+
+
+function setVisualScore(n)      { vscore = n || score; invalidateScore(); }
+function setScore(n)            { score = n; setVisualScore(n); }
+function addScore(n)            { score = score + n;   }
+function clearScore()           { resetScore()}
+function clearRows()            { setRows(0); }
+function setRows(n)             { rows = n; step = Math.max(speed.min, speed.start - (speed.decrement*(score/3000))); invalidateRows(); }
+function addRows(n)             { setRows(rows + n); }
+function getBlock(x,y)          { return (blocks && blocks[x] ? blocks[x][y] : null); }
+function setBlock(x,y,color)    { blocks[x] = blocks[x] || []; blocks[x][y] = color; invalidate(); }
+function clearBlocks()          { blocks = []; invalidate(); }
+function clearActions()         { actions = []; }
+function setCurrentPiece(piece) { current = piece || randomPiece(); invalidate();     }
+function setNextPiece(piece)    { next    = piece || randomPiece(); invalidateNext(); }
+
+//-------------------------------------------------------------------------
+// RENDERING
+//-------------------------------------------------------------------------
+
+var invalid = {};
+
+function invalidate()         { invalid.court  = true; }
+function invalidateNext()     { invalid.next   = true; }
+function invalidateScore()    { invalid.score  = true; }
+function invalidateRows()     { invalid.rows   = true; }
+
+function draw() {
+	ctx.save();
+	ctx.lineWidth = 1;
+	ctx.translate(0.5, 0.5);
+	drawCourt();
+	drawScore();
+	ctx.restore();
+}
+
+function drawCourt() {
+	if (invalid.court) {	
+		ctx.clearRect(xOffset, yOffset, gridWidth, gridHeight);
+		if (playing) {
+			drawPiece(ctx, current.type, current.x, current.y, current.dir);
+		}
+		var x, y, block;
+		for(y = 0 ; y < ny ; y++) {
+			for (x = 0 ; x < nx ; x++) {
+				color = getBlock(x,y);
+				if (color != null) {
+					drawBlock(ctx, x, y, color);
 				}
 			}
 		}
+		invalid.court = false;
+	}
+}
 
-		function handle(action) {
-			switch(action) {
-				case DIR.LEFT:  move(DIR.LEFT);  break;
-				case DIR.RIGHT: move(DIR.RIGHT); break;
-				case DIR.UP:    rotate();        break;
-				case DIR.DOWN:  drop();          break;
+function drawUpcoming() {
+	if (!playing) {
+		return
+	}
+	upcoming.src = 'img/preview/' + next.type.number + '.png';
+	upcoming.onload = function(){
+		ctx.drawImage(upcoming, 0, 0, canvas.width, canvas.height);
+	}
+}
+
+function clearUpcoming() {
+	ctx.clearRect(0, 0, canvas.width, canvas.height)
+}
+
+function drawPiece(ctx, type, x, y, dir) {
+	eachBlock(type, x, y, dir, function(x, y) {
+		drawBlock(ctx, x, y, type.color);
+	});
+}
+
+function drawBlock(ctx, x, y, color) {
+	if (y < 0) {
+		return;
+	}
+	x = xOffset + x*blockSize + blockSize/2;
+	y = yOffset + y*blockSize + blockSize/2;
+	
+	var grd = ctx.createRadialGradient(x, y, .275*blockSize, x+.35*blockSize, y-.35*blockSize, .01*blockSize);
+	
+	colors = colorMap[color];
+
+	grd.addColorStop(.1, colors[0]);
+	grd.addColorStop(.5, colors[1]);
+	grd.addColorStop(.8, colors[2]);
+	ctx.fillStyle = grd;
+	ctx.beginPath()
+	ctx.arc(x, y, .275*blockSize, 0, 2 * Math.PI, false);2
+	ctx.fill()
+}
+
+function drawScore() {
+	if (invalid.score) {
+		tempVscore = vscore
+		digit = 0;
+		while (tempVscore >= 1) {
+			if (get('digit' + digit) == undefined) {
+				addDigit()
 			}
+			get('digit' + digit).src = 'img/digits/Dni' + Math.floor(tempVscore) % 25 + '.png'
+			tempVscore /= 25
+			digit++
 		}
+		invalid.score = false;
+	}
+}
 
-		function move(dir) {
-			var x = current.x, y = current.y;
-			switch(dir) {
-				case DIR.RIGHT: x = x + 1; break;
-				case DIR.LEFT:  x = x - 1; break;
-				case DIR.DOWN:  y = y + 1; break;
-			}
-			if (!occupied(current.type, x, y, current.dir)) {
-				switch(dir) {
-					case DIR.RIGHT: playSound("thwap", .5, false, true); break;
-					case DIR.LEFT:  playSound("thwap", .5, false, true); break;
-					case DIR.DOWN:  playSound("move", .2); break;
-				}
-				current.x = x;
-				current.y = y;
-				invalidate();
-				return true;
-			} else {
-				if (dir != DIR.DOWN) {
-					playSound("blocked", .4, true)
-				}
-				return false;
-			}
-		}
+function addDigit() {
+	let newDigit = document.createElement("img");
+	newDigit.setAttribute("id", "digit" + digits);
+	newDigit.setAttribute("class", "digit");
+	newDigit.setAttribute("src", "img/digits/Dni0.png");
+	let scoreDiv = get('score')
+	digits++;
+	scoreDiv.insertBefore(newDigit, scoreDiv.children[1])
+}
 
-		function rotate() {
-			if (current.type.number == 3 || current.type.number == 5) {
-				playSound('rotate', .5);
-				return
-			}
+function resetScore() {
+	setScore(0)
+	let digits = get('score').getElementsByClassName('digit')
+	while (digits.length > 1) {
+		digits[0].parentNode.removeChild(digits[0]);
+	}
+	digits[0].src = 'img/digits/Dni0.png'
+	digits = 1
+}
 
-			var newdir = (current.dir == DIR.MAX ? DIR.MIN : current.dir + 1);
-			var nudges = [0, 1, -1] //try nudging to left and right if needed
+run();
 
-			for (var i = 0; i < nudges.length; i++) {
-				nudge = nudges[i]
-				if (!occupied(current.type, current.x + nudge, current.y, newdir)) {
-					playSound('rotate', .5);
-					current.dir = newdir;
-					current.x = current.x + nudge;
-					invalidate();
-					return;
-				}
-			}
-			playSound('stuck4', .9, true)
-		}
-
-		function drop() {
-			if (!move(DIR.DOWN)) {
-				playSound('drop', .8);
-				dropPiece();
-				removeLines();
-				setCurrentPiece(next);
-				setNextPiece();
-				clearActions();
-				if (occupied(current.type, current.x, current.y, current.dir)) {
-					lose();
-				} else {
-					drawUpcoming();
-				}
-			}
-		}
-
-		function dropPiece() {
-			eachBlock(current.type, current.x, current.y, current.dir, function(x, y) {
-				setBlock(x, y, current.type.color);
-			});
-		}
-
-		function removeLines() {
-			var x, y, complete, n = 0;
-			for (y = ny ; y > 0 ; --y) {
-				complete = true;
-				for (x = 0 ; x < nx ; ++x) {
-					if (getBlock(x, y) == null) {
-						complete = false;
-						break
-					}
-				}
-				if (complete) {
-					removeLine(y);
-					y = y + 1;
-					n++;
-				}
-			}
-			if (n > 0) {
-				playSound('ding', .25)
-				//playSound('drop', 2);
-				addRows(n);
-				if (n == 1) {	
-					score += 25
-					playSound('rows/knock');
-				} else if (n == 2) {
-					score += 55
-					playSound('rows/thud');
-				} else if (n == 3) {
-					score += 125
-					playSound('rows/wahrk');
-				} else if (n == 4) {
-					score += 500
-					playSound('rows/waffle');
-				}
-			}
-		}
-
-		function removeLine(n) {
-			var x, y;
-			for(y = n ; y >= 0 ; --y) {
-				for(x = 0 ; x < nx ; ++x)
-					setBlock(x, y, (y == 0) ? null : getBlock(x, y-1));
-			}
-		}
-
-		function eachBlock(type, x, y, dir, fn) {
-			var bit, result, row = 0, col = 0,
-			blocks = type.blocks[dir];
-			for(bit = type.bit; bit > 0 ; bit = bit / 2) {
-				if (blocks & bit) {
-					fn(x + col, y + row);
-				}
-				if (++col == type.size) {
-					col = 0;
-					row++;
-				}
-			}
-		}
-
-		function occupied(type, x, y, dir) {
-			var result = false
-			eachBlock(type, x, y, dir, function(x, y) {
-				if ((x < 0) || (x >= nx) || (y < -5) || (y >= ny) || getBlock(x,y)) {
-					result = true;
-				}
-			});
-			return result;
-		}
-
-		function randomPiece() {
-			if (bag.length == 0) {
-				for (i = 0; i < 5 * 5; i++) {
-					bag.push(i % 5)
-				}
-			}
-			var index = bag.splice(random(0, bag.length-1), 1)[0];
-			type = types[index];
-			return { type: type, dir: DIR.UP, x: type.start.x, y: type.start.y };
-		}
-
-
-		function setVisualScore(n)      { vscore = n || score; invalidateScore(); }
-		function setScore(n)            { score = n; setVisualScore(n); }
-		function addScore(n)            { score = score + n;   }
-		function clearScore()           { resetScore()}
-		function clearRows()            { setRows(0); }
-		function setRows(n)             { rows = n; step = Math.max(speed.min, speed.start - (speed.decrement*(score/3000))); invalidateRows(); }
-		function addRows(n)             { setRows(rows + n); }
-		function getBlock(x,y)          { return (blocks && blocks[x] ? blocks[x][y] : null); }
-		function setBlock(x,y,color)    { blocks[x] = blocks[x] || []; blocks[x][y] = color; invalidate(); }
-		function clearBlocks()          { blocks = []; invalidate(); }
-		function clearActions()         { actions = []; }
-		function setCurrentPiece(piece) { current = piece || randomPiece(); invalidate();     }
-		function setNextPiece(piece)    { next    = piece || randomPiece(); invalidateNext(); }
-
-		//-------------------------------------------------------------------------
-		// RENDERING
-		//-------------------------------------------------------------------------
-
-		var invalid = {};
-
-		function invalidate()         { invalid.court  = true; }
-		function invalidateNext()     { invalid.next   = true; }
-		function invalidateScore()    { invalid.score  = true; }
-		function invalidateRows()     { invalid.rows   = true; }
-
-		function draw() {
-			ctx.save();
-			ctx.lineWidth = 1;
-			ctx.translate(0.5, 0.5);
-			drawCourt();
-			drawScore();
-			ctx.restore();
-		}
-
-		function drawCourt() {
-			if (invalid.court) {	
-				ctx.clearRect(xOffset, yOffset, gridWidth, gridHeight);
-				if (playing) {
-					drawPiece(ctx, current.type, current.x, current.y, current.dir);
-				}
-				var x, y, block;
-				for(y = 0 ; y < ny ; y++) {
-					for (x = 0 ; x < nx ; x++) {
-						color = getBlock(x,y);
-						if (color != null) {
-							drawBlock(ctx, x, y, color);
-						}
-					}
-				}
-				invalid.court = false;
-			}
-		}
-
-		function drawUpcoming() {
-			if (!playing) {
-				return
-			}
-			upcoming.src = 'img/preview/' + next.type.number + '.png';
-			upcoming.onload = function(){
-				ctx.drawImage(upcoming, 0, 0, canvas.width, canvas.height);
-			}
-		}
-
-		function clearUpcoming() {
-			ctx.clearRect(0, 0, canvas.width, canvas.height)
-		}
-
-		function drawPiece(ctx, type, x, y, dir) {
-			eachBlock(type, x, y, dir, function(x, y) {
-				drawBlock(ctx, x, y, type.color);
-			});
-		}
-
-		function drawBlock(ctx, x, y, color) {
-			if (y < 0) {
-				return;
-			}
-			x = xOffset + x*blockSize + blockSize/2;
-			y = yOffset + y*blockSize + blockSize/2;
-			
-			var grd = ctx.createRadialGradient(x, y, .275*blockSize, x+.35*blockSize, y-.35*blockSize, .01*blockSize);
-			
-			colors = colorMap[color];
-
-			grd.addColorStop(.1, colors[0]);
-			grd.addColorStop(.5, colors[1]);
-			grd.addColorStop(.8, colors[2]);
-			ctx.fillStyle = grd;
-			ctx.beginPath()
-			ctx.arc(x, y, .275*blockSize, 0, 2 * Math.PI, false);2
-			ctx.fill()
-		}
-
-		function drawScore() {
-			if (invalid.score) {
-				tempVscore = vscore
-				digit = 0;
-				while (tempVscore >= 1) {
-					if (get('digit' + digit) == undefined) {
-						addDigit()
-					}
-					get('digit' + digit).src = 'img/digits/Dni' + Math.floor(tempVscore) % 25 + '.png'
-					tempVscore /= 25
-					digit++
-				}
-				invalid.score = false;
-			}
-		}
-
-		function addDigit() {
-			let newDigit = document.createElement("img");
-			newDigit.setAttribute("id", "digit" + digits);
-			newDigit.setAttribute("class", "digit");
-			newDigit.setAttribute("src", "img/digits/Dni0.png");
-			let scoreDiv = get('score')
-			digits++;
-			scoreDiv.insertBefore(newDigit, scoreDiv.children[1])
-		}
-
-		function resetScore() {
-			setScore(0)
-			let digits = get('score').getElementsByClassName('digit')
-			while (digits.length > 1) {
-				digits[0].parentNode.removeChild(digits[0]);
-			}
-			digits[0].src = 'img/digits/Dni0.png'
-			digits = 1
-		}
-
-		run();
-	</script>
+</script>
 </body>
 </html>
