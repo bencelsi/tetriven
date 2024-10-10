@@ -1,0 +1,10 @@
+I made four main changes
+1. I changed the tetris pieces to five new shapes
+2. Instead of the colors being random, each shape has a distinct color associated with it
+3. I changed the scoring system to be in base 25
+2. I disabled the 'cheat' option
+
+These aren't very significant deviations from the original game, so I don't expect to get a lot/any extra credit,
+however I figured I might as well submit this version as well. If you're a fan of the video game Riven, you might
+get the reference and think these changes are pretty cool. Otherwise, you will probably be confused as to why I
+bothered making these changes
