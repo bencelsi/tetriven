@@ -1,51 +1,64 @@
-<!---
+<!---							   		
  _______ ______ _______ _____  _____ _        ________ _   _ 
 |__   __|  ____|__   __|  __ \|_   _\ \      / /  ____| \ | |
    | |  | |__     | |  | |__) | | |  \ \    / /| |__  |  \| |
    | |  |  __|    | |  |  _  /  | |   \ \  / / |  __| | . ` |
    | |  | |____   | |  | | \ \ _| |_   \ \/ /  | |____| |\  |
    |_|  |______|  |_|  |_|  \_\_____|   \  /   |______|_| \_|   
-									     \/
+									              \/
 
-TODO- 
-easiness mode? diff shuffle strat?
-fix strange case bug - when piling beyond edge, only die on later turn
-generally should die if any tiles beyond edge
 
-higher image quality
-higher quality gehn clips
-sound volumes
-pause / space bug
-extract sounds from videos
-options menu
-linking book to enter
-island images for next
-Sound ideas - 
-156
-win: gehn singing?
-lose: fissure, clear marbles
-new game - link
-rename repo
+//TODO- 
+// easiness mode? diff shuffle strat?
 
-Alternate gehn messages:
-'i hope to see you back here shortly' , 
-'You are free to go' - not quite mean enough
-'you have my sympathies.'
-'It's a pity'
-'know that with this act of self-sacrifice, you have secured your place in history'
+// fix strange case bug - when piling beyond edge, only die on later turn
+//generally should die if any tiles beyond edge
+
+//higher image quality
+//higher quality gehn clips
+//sound volumes
+//pause / space bug
+//extract sounds from videos
+//options menu
+//linking book to enter
+//island images for next
+// symbols in corner for pause/resume, restart & music
+// music: gehns instrument; restart: the fissure
+
+//Sound ideas - 
+//156
+//drop - waffle iron fail
+//light selector, pinscreen, lake lever, wahrk smash, waffle iron, 
+
+//win: gehn singing?
+//lose: fissure, clear marbles
+//new game - link
+//rename repo
+
+// Alternate gehn messages
+// 'i hope to see you back here shortly' , 
+// 'You are free to go' - not quite mean enough
+// 'you have my sympathies.'
+// 'It's a pity'
+// 'know that with this act of self-sacrifice, you have secured your place in history'
+
 --->
 
 <!DOCTYPE html>
+<html>
 <head>
-	<title>TETRIVEN</title>
-	<meta property="og:image" content="img/background.png"/>
+	<meta property="og:image" content="img/background.png" />
+	<title>Tetriven</title>
 	<link rel="icon" href="favicon.ico">
 	<style>
 		body { background-color: black; }
-		#tetris { width: 450px; margin: auto;
+		#tetris {
+			width: 450px;
+			margin: auto;
 		}
 		#canvas {
-			width: 450px; height: 812px;
+			width: 450px; 
+			height: 812px;
 			display: inline-block;
 			background: url('img/background.png');
 			background-size: 100% 100%;
@@ -72,17 +85,16 @@ Alternate gehn messages:
 		</div>
 	</div>
 <script>
-
-if (location.hostname === "") document.title = "." + document.title
+if (location.hostname == "") document.title = "." + document.title
 
 //-------------------------------------------------------------------------
 // base helper methods
 //-------------------------------------------------------------------------
 
-function get(id)        		{ return document.getElementById(id) 						}
-function timestamp()       		{ return new Date().getTime()                             	}
-function random(min, max)      	{ return (min + (Math.random() * (max - min)))            	}
-function randomChoice(choices) 	{ return choices[Math.round(random(0, choices.length-1))] 	}
+function get(id)        	    { return document.getElementById(id) }
+function timestamp()            { return new Date().getTime() }
+function random(min, max)       { return (min + (Math.random() * (max - min))) }
+function randomChoice(choices)  { return choices[Math.round(random(0, choices.length-1))] }
 
 if (!window.requestAnimationFrame) { // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
 	window.requestAnimationFrame = window.webkitRequestAnimationFrame ||
@@ -103,25 +115,27 @@ ctx			= canvas.getContext('2d'),
 speed		= { start: .5, decrement: 0.005, min: 0.1 }, // how long before piece drops by 1 row (seconds)
 nx			= 10, // width of tetris court (in blocks)
 ny			= 20, // height of tetris court (in blocks)
-sound		= get('sound');
-soundSource	= get('soundSource');
-upcoming 	= new Image();
+sound		= get('sound')
+soundSource	= get('soundSource')
+upcoming    = new Image()
 
 types = [
 	//temple:
 	{ blocks: [0b0000011001110000, 0b0000011001100100, 0b0000111001100000, 0b0010011001100000],
-		bit: '0b1000000000000000', size: 4, color: 'green', start: { x: 3, y: -3 }, number: 1 },
+		bit: '0b1000000000000000', size: 4, color: 'green', start: { x: 3, y: -3 }, number: 1
+	},
 	//jungle:
 	{ blocks: [0b0000011110111100111000000, 0b0011001110011100111000000, 0b0000001110011110111100000, 0b0000001110011100111001100],
-		bit: '0b1000000000000000000000000', size: 5, color: 'red', start: { x: 3, y: -4 }, number: 2 },
+		bit: '0b1000000000000000000000000', size: 5, color: 'red', start: { x: 3, y: -4 }, number: 2
+	},
 	//boiler:
 	{ blocks:  [0b1111], bit: '0b1000', size: 2, color: 'purple', start: { x: 4, y: -2 }, number: 3 },
 	//survey:
 	{ blocks: [0b010010011, 0b000111100, 0b110010010, 0b001111000],
-		bit: '0b100000000', size: 3, color: 'orange', start: { x: 3, y: -3 }, number: 4 },
+		bit: '0b100000000', size: 3, color: 'orange', start: { x: 3, y: -3 }, number: 4
+	},
 	//prison:
-	{ blocks: [0b1],
-		bit: '0b1', size: 1, color: 'blue', start: {x: 4, y: -1 }, number: 5 }
+	{ blocks: [0b1], bit: '0b1', size: 1, color: 'blue', start: {x: 4, y: -1 }, number: 5 }
 ]
 
 colorMap = {
@@ -132,7 +146,10 @@ colorMap = {
 	'blue': 	['rgb(0, 0, 132)', 'rgb(0, 0, 247)', 'rgb(82, 181, 222)']
 }
 
-gehnRemarks = [ "back", "changed", "disappointed", "end", "farewell", "foolishness", "recovered", "son", "thought", "trap" ]
+gehnRemarks = [
+	"back", "changed", "disappointed", "end", "farewell", "foolishness", "recovered", "son", "thought", "trap"
+]
+
 
 //-------------------------------------------------------------------------
 // game variables (initialized during reset)
@@ -142,6 +159,7 @@ var blockSize,        // pixel size of a single tetris block
 	blocks,        // 2 dimensional array (nx*ny) representing tetris court - either empty block or occupied by a 'piece'
 	actions,       // queue of user actions (inputs)
 	playing,       // true|false - game is in progress
+	paused,
 	dt,            // time since starting this game
 	current,       // the current piece
 	next,          // the next piece
@@ -150,9 +168,9 @@ var blockSize,        // pixel size of a single tetris block
 	rows,          // number of completed rows in the current game
 	step;          // how long before current piece drops by 1 row
 
-var digits = 1;
+var digits = 1
 var muted = false
-var bag = [];
+var bag = []
 
 
 //-------------------------------------------------------------------------
@@ -160,38 +178,30 @@ var bag = [];
 //-------------------------------------------------------------------------
 
 function run() {
-	console.log('hm')
-	addEvents(); // attach keydown and resize events
-	var last = now = timestamp();
+	addEvents() // attach keydown and resize events
+	var last = now = timestamp()
 	function frame() {
-		now = timestamp();
+		now = timestamp()
 		update(Math.min(1, (now - last) / 1000.0)); // using requestAnimationFrame have to be able to handle large delta's caused when it 'hibernates' in a background or non-visible tab
-		draw();
-		last = now;
-		requestAnimationFrame(frame, canvas);
+		draw()
+		last = now
+		requestAnimationFrame(frame, canvas)
 	}
-	resize(); // setup all our sizing information
-	reset();  // reset the per-game variables
-	frame();  // start the first frame
+	resize() // setup all our sizing information
+	reset()  // reset the per-game variables
+	frame()  // start the first frame
 }
 
 function addEvents() {
-	document.addEventListener('keydown', keydown, false);
-	window.addEventListener('resize', resize, false);
+	document.addEventListener('keydown', keydown, false); window.addEventListener('resize', resize, false)
 }
 
 function resize(event) {
-	canvas.width   = canvas.clientWidth;
-	canvas.height  = canvas.clientHeight;
-	
-	gridWidth = canvas.width * .577
-	gridHeight = gridWidth * 2
-	xOffset = (canvas.width - gridWidth)/2
-	yOffset = canvas.height * .333
+	canvas.width   = canvas.clientWidth; canvas.height  = canvas.clientHeight;
+	gridWidth = canvas.width * .577; gridHeight = gridWidth * 2
+	xOffset = (canvas.width - gridWidth) / 2; yOffset = canvas.height * .333
 	blockSize = gridWidth / nx; // pixel size of a single tetris block
-	
-	invalidate();
-	invalidateNext();
+	invalidate(); invalidateNext();
 }
 
 function keydown(ev) {
@@ -200,14 +210,9 @@ function keydown(ev) {
 			case KEY.LEFT:   actions.push(DIR.LEFT);	break;
 			case KEY.RIGHT:  actions.push(DIR.RIGHT);	break;
 			case KEY.UP:     actions.push(DIR.UP);		break;
-			case KEY.DOWN:   actions.push(DIR.DOWN);	break;
-		}
-	} else {
-		switch(ev.keyCode) {
-			case KEY.SPACE: play()
-			case KEY.P: playing = !playing; playSound('button'); break;
-		}
-	}
+			case KEY.DOWN:   actions.push(DIR.DOWN);	break; }} 
+    else if (ev.keyCode == KEY.SPACE && !paused) play()
+    if (ev.keyCode == KEY.P) { playing = !playing; paused = !paused; playSound('button') } 
 	ev.preventDefault(); // prevent arrow keys from scrolling the page (supported in IE9+ and all other browsers)
 }
 
@@ -220,34 +225,30 @@ let audioMap = []
 function playSound(clip, volume = 1, defer = false, layer = false, loop = false, format='.wav') {
 	if (muted) return
 	audio = audioMap[clip]
-	if (defer === true && audio != null && audio.paused === false) return
 
-	if (audio == null || layer === true) {
+	if (defer == true && audio != null && audio.paused == false) return
+
+	if (audio == null || layer == true) {
 		audio = new Audio();
-		audio.src = 'sound/' + clip + format
-		audioMap[clip] = audio;
+		audio.src = 'aud/' + clip + format
+		audioMap[clip] = audio
 	}
 
 	audio.currentTime = 0
 	audio.volume = volume
-
-	if (loop) { audio.onended = function() { playSound(clip, volume, false, false, true, '.mp3') }}
-
-	audio.play();
+	audio.loop = loop
+	audio.play()
 }
 
-function stopSound(clip) {
-	let audio = audioMap[clip]
-	audio.pause()
-}
+function stopSound(clip) { let audio = audioMap[clip]; audio.pause() }
 
 //-------------------------------------------------------------------------
 // GAME LOGIC
 //-------------------------------------------------------------------------
 
 function play() {
-	console.log('play')
-	playing = true;
+	playing = true
+	paused = false
 	playSound('music', .6, false, false, true, '.mp3')
 	playSound('start')
 	start = get('start')
@@ -263,14 +264,16 @@ function lose() {
 	playing = false; 
 	clearUpcoming()
 	stopSound('music')
-	playSound('lose', .5)
-	setVisualScore()
-	setTimeout(function() { playSound("gehn/" + gehnRemarks[Math.round(random(0, gehnRemarks.length - 1))]) }, 1000)
+	playSound('lose', .5);
+	setVisualScore(); 
+	setTimeout(function(){
+		playSound("gehn/" + gehnRemarks[Math.round(random(0, gehnRemarks.length - 1))])
+	}, 1000);
 }
 
 function reset() {
-	dt = 0
-	digits = 1
+	dt = 0;
+	digits = 1;
 	clearActions(); clearBlocks(); clearRows(); clearScore();
 	setCurrentPiece(next);
 	setNextPiece();
@@ -283,8 +286,7 @@ function update(idt) {
 		handle(actions.shift());
 		dt = dt + idt;
 		if (dt > step) {
-			dt = dt - step;
-			drop();
+			dt = dt - step; drop();
 		}
 	}
 }
@@ -311,7 +313,7 @@ function move(dir) {
 			case DIR.LEFT:  playSound("thwap", .5, false, true); break;
 			case DIR.DOWN:  playSound("move", .2); break;
 		}
-		current.x = x; current.y = y;
+		current.x = x; current.y = y
 		invalidate();
 		return true;
 	} else {
@@ -322,8 +324,7 @@ function move(dir) {
 
 function rotate() {
 	if (current.type.number == 3 || current.type.number == 5) {
-		playSound('rotate', .5);
-		return
+		playSound('rotate', .5); return
 	}
 
 	var newdir = (current.dir == DIR.MAX ? DIR.MIN : current.dir + 1);
@@ -350,8 +351,8 @@ function drop() {
 		setCurrentPiece(next);
 		setNextPiece();
 		clearActions();
-		if (occupied(current.type, current.x, current.y, current.dir)) { lose() } 
-		else { drawUpcoming() }
+		if (occupied(current.type, current.x, current.y, current.dir)) lose();
+		else drawUpcoming();
 	}
 }
 
@@ -366,25 +367,32 @@ function removeLines() {
 	for (y = ny ; y > 0 ; --y) {
 		complete = true;
 		for (x = 0 ; x < nx ; ++x) {
-			if (getBlock(x, y) == null) { complete = false; break }
+			if (getBlock(x, y) == null) {
+				complete = false;
+				break
+			}
 		}
-		if (complete) { removeLine(y); y = y + 1; n++; }
+		if (complete) {
+			removeLine(y);
+			y = y + 1;
+			n++;
+		}
 	}
 	if (n > 0) {
 		playSound('ding', .25)
 		//playSound('drop', 2);
 		addRows(n);
-		if (n == 1) { score += 25; playSound('rows/knock') } 
-		else if (n == 2) { score += 55; playSound('rows/thud') }
-		else if (n == 3) { score += 125; playSound('rows/wahrk') } 
-		else if (n == 4) { score += 500; playSound('rows/waffle') }
+		if (n == 1) {       score += 25;    playSound('rows/knock') }
+        else if (n == 2) {  score += 55;    playSound('rows/thud') } 
+        else if (n == 3) {  score += 125;   playSound('rows/wahrk') } 
+        else if (n == 4) {  score += 500;   playSound('rows/waffle') }
 	}
 }
 
 function removeLine(n) {
 	var x, y;
-	for(y = n ; y >= 0 ; --y) {
-		for(x = 0 ; x < nx ; ++x)
+	for (y = n ; y >= 0 ; --y) {
+		for (x = 0 ; x < nx ; ++x)
 			setBlock(x, y, (y == 0) ? null : getBlock(x, y-1));
 	}
 }
@@ -394,44 +402,43 @@ function eachBlock(type, x, y, dir, fn) {
 	blocks = type.blocks[dir];
 	for (bit = type.bit; bit > 0 ; bit = bit / 2) {
 		if (blocks & bit) { fn(x + col, y + row) }
-		if (++col == type.size) {
-			col = 0;
-			row++;
-		}
+		if (++col == type.size) { col = 0; row++ }
 	}
 }
 
 function occupied(type, x, y, dir) {
 	var result = false
 	eachBlock(type, x, y, dir, function(x, y) {
-		if ((x < 0) || (x >= nx) || (y < -5) || (y >= ny) || getBlock(x,y)) result = true
+		if ((x < 0) || (x >= nx) || (y < -5) || (y >= ny) || getBlock(x,y)) result = true;
 	})
 	return result
 }
 
 function randomPiece() {
 	if (bag.length == 0) {
-		for (i = 0; i < 5 * 5; i++) bag.push(i % 5)
+		for (i = 0; i < 5 * 5; i++) {
+			bag.push(i % 5)
+		}
 	}
-	var index = bag.splice(random(0, bag.length-1), 1)[0]
+	var index = bag.splice(random(0, bag.length-1), 1)[0];
 	type = types[index];
-	return { type: type, dir: DIR.UP, x: type.start.x, y: type.start.y }
+	return { type: type, dir: DIR.UP, x: type.start.x, y: type.start.y };
 }
 
 
-function setVisualScore(n)      { vscore = n || score; invalidateScore() }
-function setScore(n)            { score = n; setVisualScore(n) }
-function addScore(n)            { score = score + n }
-function clearScore()           { resetScore() }
-function clearRows()            { setRows(0) }
-function setRows(n)             { rows = n; step = Math.max(speed.min, speed.start - (speed.decrement * (score / 3000))); invalidateRows() }
-function addRows(n)             { setRows(rows + n) }
-function getBlock(x,y)          { return (blocks && blocks[x] ? blocks[x][y] : null) }
-function setBlock(x,y,color)    { blocks[x] = blocks[x] || []; blocks[x][y] = color; invalidate() }
-function clearBlocks()          { blocks = []; invalidate() }
-function clearActions()         { actions = [] }
-function setCurrentPiece(piece) { current = piece || randomPiece(); invalidate() }
-function setNextPiece(piece)    { next    = piece || randomPiece(); invalidateNext() }
+function setVisualScore(n)      { vscore = n || score; invalidateScore(); }
+function setScore(n)            { score = n; setVisualScore(n); }
+function addScore(n)            { score = score + n;   }
+function clearScore()           { resetScore()}
+function clearRows()            { setRows(0); }
+function setRows(n)             { rows = n; step = Math.max(speed.min, speed.start - (speed.decrement*(score/3000))); invalidateRows(); }
+function addRows(n)             { setRows(rows + n); }
+function getBlock(x,y)          { return (blocks && blocks[x] ? blocks[x][y] : null); }
+function setBlock(x,y,color)    { blocks[x] = blocks[x] || []; blocks[x][y] = color; invalidate(); }
+function clearBlocks()          { blocks = []; invalidate(); }
+function clearActions()         { actions = []; }
+function setCurrentPiece(piece) { current = piece || randomPiece(); invalidate();     }
+function setNextPiece(piece)    { next    = piece || randomPiece(); invalidateNext(); }
 
 //-------------------------------------------------------------------------
 // RENDERING
@@ -439,58 +446,60 @@ function setNextPiece(piece)    { next    = piece || randomPiece(); invalidateNe
 
 var invalid = {};
 
-function invalidate()         { invalid.court  = true }
-function invalidateNext()     { invalid.next   = true }
-function invalidateScore()    { invalid.score  = true }
-function invalidateRows()     { invalid.rows   = true }
+function invalidate()         { invalid.court  = true; }
+function invalidateNext()     { invalid.next   = true; }
+function invalidateScore()    { invalid.score  = true; }
+function invalidateRows()     { invalid.rows   = true; }
 
 function draw() {
-	console.log('f')
-	ctx.save()
-	ctx.lineWidth = 1
-	ctx.translate(0.5, 0.5)
-	drawCourt()
-	drawScore()
-	ctx.restore()
+	ctx.save();
+	ctx.lineWidth = 1;
+	ctx.translate(0.5, 0.5);
+	drawCourt();
+	drawScore();
+	ctx.restore();
 }
 
 function drawCourt() {
 	if (invalid.court) {	
-		ctx.clearRect(xOffset, yOffset, gridWidth, gridHeight)
-		if (playing) drawPiece(ctx, current.type, current.x, current.y, current.dir)
+		ctx.clearRect(xOffset, yOffset, gridWidth, gridHeight);
+		if (playing) drawPiece(ctx, current.type, current.x, current.y, current.dir);
 		var x, y, block;
-		for(y = 0 ; y < ny ; y++) {
+		for (y = 0 ; y < ny ; y++) {
 			for (x = 0 ; x < nx ; x++) {
-				color = getBlock(x,y)
-				if (color != null) drawBlock(ctx, x, y, color)
+				color = getBlock(x,y);
+				if (color != null) {
+					drawBlock(ctx, x, y, color);
+				}
 			}
 		}
-		invalid.court = false
+		invalid.court = false;
 	}
 }
 
 function drawUpcoming() {
 	if (!playing) return
-	upcoming.src = 'img/preview/' + next.type.number + '.png'
-	upcoming.onload = function() { ctx.drawImage(upcoming, 0, 0, canvas.width, canvas.height) }
+	upcoming.src = 'img/preview/' + next.type.number + '.png';
+	upcoming.onload = () => {
+		ctx.drawImage(upcoming, 0, 0, canvas.width, canvas.height);
+	}
 }
 
 function clearUpcoming() { ctx.clearRect(0, 0, canvas.width, canvas.height) }
 
 function drawPiece(ctx, type, x, y, dir) {
 	eachBlock(type, x, y, dir, function(x, y) {
-		drawBlock(ctx, x, y, type.color)
+		drawBlock(ctx, x, y, type.color);
 	});
 }
 
 function drawBlock(ctx, x, y, color) {
-	if (y < 0) return;
-	x = xOffset + x * blockSize + blockSize / 2;
-	y = yOffset + y * blockSize + blockSize / 2;
-	var grid = ctx.createRadialGradient(x, y, .275 * blockSize, x + .35 * blockSize, y - .35 * blockSize, .01 * blockSize)
+	if (y < 0) return
+	x = xOffset + x * blockSize + blockSize / 2; y = yOffset + y * blockSize + blockSize / 2
+	var grd = ctx.createRadialGradient(x, y, .275 * blockSize, x + .35 * blockSize, y - .35 * blockSize, .01 * blockSize);
 	colors = colorMap[color];
-	grid.addColorStop(.1, colors[0]); grid.addColorStop(.5, colors[1]); grid.addColorStop(.8, colors[2])
-	ctx.fillStyle = grid
+	grd.addColorStop(.1, colors[0]); grd.addColorStop(.5, colors[1]); grd.addColorStop(.8, colors[2]);
+	ctx.fillStyle = grd
 	ctx.beginPath()
 	ctx.arc(x, y, .275 * blockSize, 0, 2 * Math.PI, false)
 	ctx.fill()
@@ -499,31 +508,31 @@ function drawBlock(ctx, x, y, color) {
 function drawScore() {
 	if (invalid.score) {
 		tempVscore = vscore
-		digit = 0;
+		digit = 0
 		while (tempVscore >= 1) {
 			if (get('digit' + digit) == undefined) addDigit()
 			get('digit' + digit).src = 'img/digits/Dni' + Math.floor(tempVscore) % 25 + '.png'
 			tempVscore /= 25
 			digit++
 		}
-		invalid.score = false;
+		invalid.score = false
 	}
 }
 
 function addDigit() {
-	let newDigit = document.createElement("img");
-	newDigit.setAttribute("id", "digit" + digits);
-	newDigit.setAttribute("class", "digit");
-	newDigit.setAttribute("src", "img/digits/Dni0.png");
+	let newDigit = document.createElement("img")
+	newDigit.setAttribute("id", "digit" + digits)
+	newDigit.setAttribute("class", "digit")
+	newDigit.setAttribute("src", "img/digits/Dni0.png")
 	let scoreDiv = get('score')
-	digits++;
+	digits++
 	scoreDiv.insertBefore(newDigit, scoreDiv.children[1])
 }
 
 function resetScore() {
 	setScore(0)
 	let digits = get('score').getElementsByClassName('digit')
-	while (digits.length > 1) digits[0].parentNode.removeChild(digits[0])
+	while (digits.length > 1) { digits[0].parentNode.removeChild(digits[0]) }
 	digits[0].src = 'img/digits/Dni0.png'
 	digits = 1
 }
@@ -532,3 +541,4 @@ run();
 
 </script>
 </body>
+</html>
